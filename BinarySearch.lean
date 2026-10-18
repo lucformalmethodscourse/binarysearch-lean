@@ -1,7 +1,7 @@
 import Sorted
 
 /-
-Good choice: `Array Nat` (or `Array α` with `[Ord α]`).
+Good choice of data structure: `Array Nat` (or `Array α` with `[Ord α]`).
 - O(1) indexing, which binary search needs (`List` is O(n) per index).
 - Bounds-proved indexing (`a[i]'h`) makes verification natural.
 - Sortedness: ∀ i j, i ≤ j → a[i] ≤ a[j].
@@ -11,15 +11,10 @@ Good choice: `Array Nat` (or `Array α` with `[Ord α]`).
 
 Precondition (not enforced here): `a` is sorted, i.e.
 `∀ i j (hi : i < a.size) (hj : j < a.size), i ≤ j → a[i] ≤ a[j]`.
+
 Not enforcing it keeps the function total and executable on any input
 (on unsorted input it may return `none` incorrectly, but never crashes).
-Requiring a proof argument would make callers prove sortedness at every call.
-Costs of enforcing or checking sortedness:
-- Runtime check: O(n) per call, which defeats the O(log n) purpose of binary search.
-- Proof argument (`Sorted a`): no runtime cost (proofs are erased), but a proof
-  burden on callers, who must establish it (e.g. once after sorting, then reuse it).
-- Subtype/structure (`SortedArray`): pay once at construction (sort or check, O(n log n)/O(n)),
-  then every search is free of checks.
+
 The usual approach: keep the definition simple and state the precondition in
 the correctness theorems, e.g.
 `Sorted a → binarySearch a t = some i → a[i]? = some t` and
