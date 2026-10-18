@@ -7,8 +7,8 @@ A CS 335 teaching project.
 
 | File | Purpose |
 |------|---------|
-| [Sorted.lean](./Sorted.lean) | `Sorted` predicate, ZOMBIES-style examples, and proof macros (`sorted_by_cases`, `not_sorted_at`) |
-| [BinarySearch.lean](./BinarySearch.lean) | `binarySearch`, example evaluations, soundness/completeness theorems |
+| [BinarySearch.lean](./BinarySearch.lean) | `binarySearch`, example evaluations, soundness/completeness theorem skeletons |
+| [Sorted.lean](./Sorted.lean) | `Sorted` predicate, example evaluations, and proof macros (`sorted_by_cases`, `not_sorted_at`) |
 | [SquareOfEven.lean](./SquareOfEven.lean) | Small standalone proof example |
 | [doc/ai/](./doc/ai) | Timestamped transcripts of AI-assisted sessions |
 
