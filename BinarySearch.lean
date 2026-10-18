@@ -59,7 +59,33 @@ theorem go_sound (a : Array Nat) (t : Nat) :
     ∀ lo hi i, binarySearch.go a t lo hi = some i → a[i]? = some t := by
   intro lo hi
   induction lo, hi using binarySearch.go.induct a t with
-  | _ => sorry -- unfold `binarySearch.go`, split on the ifs, use IH / `simp_all`
+  | case1 lo hi hlo mid hmid v heq =>
+      intro i hret
+      have hv : a[mid] = t := by
+        dsimp [v] at heq
+        exact beq_iff_eq.mp heq
+      rw [binarySearch.go.eq_1] at hret
+      simp [hlo, mid, hmid, v, heq] at hret
+      subst i
+      simp [mid, hmid, hv]
+  | case2 lo hi hlo mid hmid v hne hlt ih =>
+      intro i hret
+      apply ih i
+      rw [binarySearch.go.eq_1] at hret
+      simpa [hlo, mid, hmid, v, hne, hlt] using hret
+  | case3 lo hi hlo mid hmid v hne hnotlt ih =>
+      intro i hret
+      apply ih i
+      rw [binarySearch.go.eq_1] at hret
+      simpa [hlo, mid, hmid, v, hne, hnotlt] using hret
+  | case4 lo hi hlo mid hnotmid =>
+      intro i hret
+      rw [binarySearch.go.eq_1] at hret
+      simp [hlo, mid, hnotmid] at hret
+  | case5 lo hi hnotlo =>
+      intro i hret
+      rw [binarySearch.go.eq_1] at hret
+      simp [hnotlo] at hret
 
 /-- Completeness invariant: if `t` lies in the range `[lo, hi)` (at some index `k`),
 and `a` is sorted, then `go lo hi` finds something. -/
@@ -68,7 +94,49 @@ theorem go_complete (a : Array Nat) (t : Nat) (hs : Sorted a) :
       (binarySearch.go a t lo hi).isSome := by
   intro lo hi
   induction lo, hi using binarySearch.go.induct a t with
-  | _ => sorry -- case v < t: k ≥ mid+1 by sortedness (hs); case v > t: k < mid; use IH
+  | case1 lo hi hlo mid hmid v heq =>
+      intro k hlow hkh hsize hval
+      rw [binarySearch.go.eq_1]
+      simp [hlo, mid, hmid, v, heq]
+  | case2 lo hi hlo mid hmid v hne hlt ih =>
+      intro k hlow hkh hsize hval
+      have hksize : k < a.size := Nat.lt_of_lt_of_le hkh hsize
+      have hval' : a[k] = t := by
+        simpa [hksize] using hval
+      have hmk : mid < k := by
+        by_contra hnot
+        have hkm : k ≤ mid := Nat.le_of_not_gt hnot
+        have hle : a[k] ≤ a[mid] := hs k mid hksize hmid hkm
+        dsimp [v] at hlt
+        omega
+      rw [binarySearch.go.eq_1]
+      simpa [hlo, mid, hmid, v, hne, hlt] using
+        (ih k (Nat.succ_le_of_lt hmk) hkh hsize hval)
+  | case3 lo hi hlo mid hmid v hne hnotlt ih =>
+      intro k hlow hkh hsize hval
+      have hksize : k < a.size := Nat.lt_of_lt_of_le hkh hsize
+      have hval' : a[k] = t := by
+        simpa [hksize] using hval
+      have htv : t < v := by
+        dsimp [v] at hne hnotlt
+        simp [beq_iff_eq] at hne
+        omega
+      have hkm : k < mid := by
+        by_contra hnot
+        have hmk : mid ≤ k := Nat.le_of_not_gt hnot
+        have hle : a[mid] ≤ a[k] := hs mid k hmid hksize hmk
+        dsimp [v] at htv
+        omega
+      rw [binarySearch.go.eq_1]
+      simpa [hlo, mid, hmid, v, hne, hnotlt] using
+        (ih k hlow hkm (Nat.le_of_lt hmid) hval)
+  | case4 lo hi hlo mid hnotmid =>
+      intro k hlow hkh hsize hval
+      dsimp [mid] at hnotmid
+      omega
+  | case5 lo hi hnotlo =>
+      intro k hlow hkh hsize hval
+      omega
 
 theorem binarySearch_sound (a : Array Nat) (t i : Nat) :
     binarySearch a t = some i → a[i]? = some t :=
