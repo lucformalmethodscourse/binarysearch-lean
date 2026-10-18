@@ -1,7 +1,7 @@
 # binarysearch-lean
 
 Binary search on sorted `Array Nat` in Lean 4, with a specification and correctness theorems.
-A CS 335 teaching project.
+An exploration of using formal methods in introductory programming courses.
 
 ## Contents
 
