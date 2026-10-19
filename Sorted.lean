@@ -2,7 +2,7 @@ module
 
 import Mathlib.Tactic.IntervalCases
 
-public section
+@[expose] public section
 
 /-- Sortedness. -/
 def Sorted (a : Array Nat) : Prop :=
