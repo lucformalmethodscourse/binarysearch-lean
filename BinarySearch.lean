@@ -119,7 +119,7 @@ theorem binarySearch.goCalls_le_binarySearchCalls (a : Array Nat) (target : Nat)
   induction lo, hi using binarySearch.go.induct a target with
   | case1 lo hi hlo mid hmid v heq =>
       rw [binarySearch.goCalls.eq_1]
-      simp [hlo, mid, hmid, v, heq]
+      simp only [hlo, mid, hmid, v, heq, dite_eq_ite]
       exact binarySearchCalls_pos (hi - lo)
   | case2 lo hi hlo mid hmid v hne hlt ih =>
       cases hN : hi - lo with
@@ -140,7 +140,8 @@ theorem binarySearch.goCalls_le_binarySearchCalls (a : Array Nat) (target : Nat)
           have hlt' : a[lo + (n + 1) / 2] < target := by
             simpa [hv] using hlt
           rw [binarySearch.goCalls.eq_1]
-          simp [hlo, hN, hmidBound, hnotEq, hlt']
+          simp only [hlo, hN, hmidBound, hnotEq, hlt', dite_eq_ite, ge_iff_le,
+            Bool.false_eq_true, ite_true, ite_false]
           have ih' :
               binarySearch.goCalls a target (mid + 1) hi ≤ binarySearchCalls (n / 2) := by
             simpa only [hmidEq, hrightLen] using ih
@@ -153,7 +154,7 @@ theorem binarySearch.goCalls_le_binarySearchCalls (a : Array Nat) (target : Nat)
               binarySearch.goCalls a target (lo + (n + 1) / 2 + 1) hi ≤
                 max (binarySearchCalls ((n + 1) / 2)) (binarySearchCalls (n / 2)) := by
             simpa only [hmidEq] using hchild
-          simpa [Nat.add_comm] using Nat.lt_succ_of_le hchild'
+          simpa only [Nat.add_comm] using Nat.add_le_add_left hchild' 1
   | case3 lo hi hlo mid hmid v hne hnotlt ih =>
       cases hN : hi - lo with
       | zero =>
@@ -173,7 +174,8 @@ theorem binarySearch.goCalls_le_binarySearchCalls (a : Array Nat) (target : Nat)
           have hnotlt' : ¬a[lo + (n + 1) / 2] < target := by
             simpa [hv] using hnotlt
           rw [binarySearch.goCalls.eq_1]
-          simp [hlo, hN, hmidBound, hnotEq, hnotlt']
+          simp only [hlo, hN, hmidBound, hnotEq, hnotlt', dite_eq_ite, ge_iff_le,
+            Bool.false_eq_true, ite_true, ite_false]
           have ih' :
               binarySearch.goCalls a target lo mid ≤
                 binarySearchCalls ((n + 1) / 2) := by
@@ -187,14 +189,14 @@ theorem binarySearch.goCalls_le_binarySearchCalls (a : Array Nat) (target : Nat)
               binarySearch.goCalls a target lo (lo + (n + 1) / 2) ≤
                 max (binarySearchCalls ((n + 1) / 2)) (binarySearchCalls (n / 2)) := by
             simpa only [hmidEq] using hchild
-          simpa [Nat.add_comm] using Nat.lt_succ_of_le hchild'
+          simpa only [Nat.add_comm] using Nat.add_le_add_left hchild' 1
   | case4 lo hi hlo mid hnotmid =>
       rw [binarySearch.goCalls.eq_1]
-      simp [hlo, mid, hnotmid]
+      simp only [hlo, mid, hnotmid, beq_iff_eq, dite_eq_ite]
       exact binarySearchCalls_pos (hi - lo)
   | case5 lo hi hnotlo =>
       rw [binarySearch.goCalls.eq_1]
-      simp [hnotlo]
+      simp only [hnotlo, beq_iff_eq, dite_eq_ite]
       exact binarySearchCalls_pos (hi - lo)
 
 /-- A shifted-logarithm bound, defined at zero as well as on positive inputs. -/
