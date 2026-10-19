@@ -45,8 +45,10 @@ where
 #eval binarySearch #[] 5                    -- none
 #eval binarySearch #[42] 42                 -- some 0
 
-example : binarySearch #[1, 3, 5, 7, 9, 11] 7 = some 3 := by native_decide
-example : binarySearch #[1, 3, 5, 7, 9, 11] 4 = none := by native_decide
+example : binarySearch #[1, 3, 5, 7, 9, 11] 7 = some 3 := by
+  simp [binarySearch, binarySearch.go]
+example : binarySearch #[1, 3, 5, 7, 9, 11] 4 = none := by
+  simp [binarySearch, binarySearch.go]
 
 /-! Correctness
 
