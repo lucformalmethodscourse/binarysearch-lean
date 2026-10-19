@@ -8,6 +8,13 @@ public import Mathlib.Data.Nat.Log
 
 @[expose] public section
 
+/-
+Proof outline:
+1. Define a worst-case recurrence and a call counter that follows the program.
+2. Bound the recurrence by a logarithm, then show each execution is bounded by it.
+3. Convert the explicit natural-number bound into a real-valued Big-O statement.
+-/
+
 /-- Worst-case number of calls to `go` on an interval of length `n`.
 
 Each call counts once, then takes the more expensive of the two recursive
@@ -42,6 +49,7 @@ decreasing_by all_goals omega
 /-- The recursive-call count is bounded by the base-2 logarithm plus a constant. -/
 theorem binarySearchCalls_le_log_add_two (n : Nat) :
     binarySearchCalls n ≤ Nat.log2 n + 2 := by
+  -- Strong induction applies because each recursive subproblem is smaller.
   induction n using Nat.strong_induction_on with
   | h n ih =>
       cases n with
@@ -52,11 +60,14 @@ theorem binarySearchCalls_le_log_add_two (n : Nat) :
           · subst n
             norm_num [binarySearchCalls]
           · have hn' : 1 ≤ n := by omega
+            -- Both subinterval sizes are smaller than the current size n + 1.
             have hleft : (n + 1) / 2 < n + 1 := by omega
             have hright : n / 2 < n + 1 := by omega
+            -- The larger half has logarithmic depth one less than the whole.
             have hchildLogNat :
                 Nat.log 2 (n + 1) = Nat.log 2 ((n + 1) / 2) + 1 :=
               Nat.log_of_one_lt_of_le Nat.one_lt_two (by omega)
+            -- Halving the interval reduces its logarithmic depth by one.
             have hchildLog : Nat.log2 ((n + 1) / 2) + 1 = Nat.log2 (n + 1) := by
               simpa only [← Nat.log2_eq_log_two] using hchildLogNat.symm
             have hleftLogNat :
@@ -69,6 +80,7 @@ theorem binarySearchCalls_le_log_add_two (n : Nat) :
                 max (binarySearchCalls ((n + 1) / 2)) (binarySearchCalls (n / 2)) ≤
                   Nat.log2 (n + 1) + 1 := by
               apply max_le
+              -- Bound each recursive branch using its induction hypothesis.
               · calc
                   binarySearchCalls ((n + 1) / 2) ≤ Nat.log2 ((n + 1) / 2) + 2 :=
                     ih _ hleft
@@ -83,6 +95,7 @@ theorem binarySearchCalls_le_log_add_two (n : Nat) :
 theorem binarySearch.goCalls_le_binarySearchCalls (a : Array Nat) (target : Nat) :
     ∀ lo hi, binarySearch.goCalls a target lo hi ≤ binarySearchCalls (hi - lo) := by
   intro lo hi
+  -- The induction cases match `go`: hit, search right, search left, and stop.
   induction lo, hi using binarySearch.go.induct a target with
   | case1 lo hi hlo mid hmid v heq =>
       rw [binarySearch.goCalls.eq_1]
@@ -91,13 +104,16 @@ theorem binarySearch.goCalls_le_binarySearchCalls (a : Array Nat) (target : Nat)
   | case2 lo hi hlo mid hmid v hne hlt ih =>
       cases hN : hi - lo with
       | zero =>
+          -- This contradicts the nonempty-interval condition in this branch.
           omega
       | succ n =>
+          -- With interval length n + 1, the right child has length n / 2.
           have hmidEq : mid = lo + (n + 1) / 2 := by
             dsimp [mid]
             omega
           have hrightLen : hi - (lo + (n + 1) / 2 + 1) = n / 2 := by
             omega
+          -- Rewrite the array access and branch tests at the computed midpoint.
           have hmidBound : lo + (n + 1) / 2 < a.size := by
             simpa [hmidEq] using hmid
           have hv : a[lo + (n + 1) / 2] = v := by
@@ -109,6 +125,8 @@ theorem binarySearch.goCalls_le_binarySearchCalls (a : Array Nat) (target : Nat)
           rw [binarySearch.goCalls.eq_1]
           simp only [hlo, hN, hmidBound, hnotEq, hlt', dite_eq_ite, ge_iff_le,
             Bool.false_eq_true, ite_true, ite_false]
+          -- Apply the induction hypothesis to the chosen child, then bound it
+          -- by the maximum used in the recurrence.
           have ih' :
               binarySearch.goCalls a target (mid + 1) hi ≤ binarySearchCalls (n / 2) := by
             simpa only [hmidEq, hrightLen] using ih
@@ -127,6 +145,7 @@ theorem binarySearch.goCalls_le_binarySearchCalls (a : Array Nat) (target : Nat)
       | zero =>
           omega
       | succ n =>
+          -- The left child has length (n + 1) / 2.
           have hmidEq : mid = lo + (n + 1) / 2 := by
             dsimp [mid]
             omega
@@ -169,6 +188,7 @@ theorem binarySearch.goCalls_le_binarySearchCalls (a : Array Nat) (target : Nat)
 /-- A shifted-logarithm bound, defined at zero as well as on positive inputs. -/
 theorem binarySearchCalls_le_three_mul_log (n : Nat) :
     binarySearchCalls n ≤ 3 * Nat.log2 (n + 2) := by
+  -- The shift keeps the logarithm positive even when n = 0.
   have hlog := binarySearchCalls_le_log_add_two n
   have hmonoNat : Nat.log 2 n ≤ Nat.log 2 (n + 2) :=
     Nat.log_mono_right (b := 2) (by omega)
@@ -192,6 +212,8 @@ theorem binarySearch.goCalls_le_three_mul_log (a : Array Nat) (target : Nat) :
 theorem binarySearchCalls_isBigO :
     (fun n : Nat => (binarySearchCalls n : ℝ)) =O[Filter.atTop]
       (fun n => (Nat.log2 (n + 2) : ℝ)) := by
+  -- Cast the explicit natural-number bound to reals; the nonnegativity facts
+  -- let the inequality be rewritten as the norm inequality in the definition.
   apply Asymptotics.IsBigOWith.isBigO (c := 3)
   rw [Asymptotics.isBigOWith_iff]
   filter_upwards [Filter.Eventually.of_forall
