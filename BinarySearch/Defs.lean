@@ -26,13 +26,23 @@ def binarySearch (a : Array Nat) (target : Nat) : Option Nat :=
 where
   /-- Searches within the half-open range `[lo, hi)`. -/
   go (lo hi : Nat) : Option Nat :=
+    -- Is the interval non-empty? `h` is kept as a proof for termination checking.
     if h : lo < hi then
+      -- Midpoint; `lo + (hi - lo) / 2` avoids overflow in fixed-width languages.
       let mid := lo + (hi - lo) / 2
+      -- Prove `mid` is in bounds so `a[mid]` needs no runtime check.
       if hm : mid < a.size then
+        -- Probe the middle element.
         let v := a[mid]
+        -- Found: return its index.
         if v == target then some mid
+        -- Too small (array is sorted): target is right of `mid`; drop `mid` and everything left.
         else if v < target then go (mid + 1) hi
+        -- Too big: target is left of `mid`; `hi` is exclusive, so `mid` is dropped too.
         else go lo mid
+      -- `mid` out of bounds (only if `hi > a.size`): return `none` to stay total.
       else none
+    -- Empty interval: target is absent.
     else none
+  -- `hi - lo` strictly shrinks on every recursive call, so recursion terminates.
   termination_by hi - lo
